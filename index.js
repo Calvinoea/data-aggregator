@@ -2,9 +2,11 @@ var http = require('http');
 var request = require('request');
 var fs = require('fs');
 var csv = require('csv');
+var url = require('url');
 
 
-var request_body = undefined;
+var json_request_body = undefined;
+var csv_request_body = undefined;
 var html_content = undefined;
 
 function createHtmlStringFromJson(retrievedData) {
@@ -83,15 +85,15 @@ function createHtmlStringFromCsv(retrievedData) {
 
 }
 
-// request('https://www.bnefoodtrucks.com.au/api/1/trucks', function(err, request_res, body) {
+request('https://www.bnefoodtrucks.com.au/api/1/trucks', function(err, request_res, body) {
 
-//     request_body = body;
+    json_request_body = body;
 
-// });
+});
 
 request('https://www.data.brisbane.qld.gov.au/data/dataset/edeb4918-34d0-428c-857d-70f8983af1b3/resource/69ed0503-43db-4873-abd6-9fcc500b805b/download/cars-srsa-open-data-food-safety-permits-1-july-2020.csv', function(err, request_res, body) {
     csv.parse(body, function(err, data) {
-        request_body = data;
+        csv_request_body = data;
 
     });
 });
@@ -101,10 +103,18 @@ request('https://www.data.brisbane.qld.gov.au/data/dataset/edeb4918-34d0-428c-85
 
 http.createServer(function(req, res) {
 
-    if (request_body && html_content) {
+    if (json_request_body && csv_request_body && html_content) {
 
-        // res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(createHtmlStringFromCsv(request_body));
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        var request_url = url.parse(req.url);
+        switch (request_url.path) {
+            case '/json':
+                res.end(createHtmlStringFromJson(JSON.parse(json_request_body)));
+                break;
+            case '/csv':
+                res.end(createHtmlStringFromCsv(csv_request_body))
+                break;
+        }
 
     } else {
 
