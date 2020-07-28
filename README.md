@@ -22,7 +22,7 @@ The application has been made using:
 - HTML
 - CSS
 
-
+# Screenshots
 
 ![Screenshot](screenshot1.png)
 ![Screenshot](screenshot2.png)
