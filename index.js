@@ -3,100 +3,36 @@ var request = require('request');
 var fs = require('fs');
 var csv = require('csv');
 var url = require('url');
+var create_html = require('./create_html.js')
 
 
 var json_request_body = undefined;
 var csv_request_body = undefined;
 var html_content = undefined;
 
-function createHtmlStringFromJson(retrievedData) {
 
-    var body_begin_index = html_content.indexOf('<body>');
-    var body_end_index = html_content.indexOf('</body>');
+setInterval(function() {
 
-    var string_until_body = html_content.slice(0, body_begin_index + 6);
-    var string_from_body = html_content.slice(body_end_index);
+    request('https://www.bnefoodtrucks.com.au/api/1/trucks', function(err, request_res, body) {
 
+        json_request_body = body;
 
-    var html_string = '<table>\n'
-    html_string += '<tr>\n';
-    for (var attribute in retrievedData[0]) {
-
-        if (typeof retrievedData[0][attribute] !== 'object') {
-
-            html_string += '<td>' + attribute + '</td>\n';
-        }
-    }
-    html_string += '</tr>'
-
-
-    retrievedData.forEach(function(object) {
-        html_string += '</tr>\n'
-        for (var attribute in object) {
-
-            if (typeof object[attribute] !== 'object') {
-
-                html_string += '<td>' + object[attribute] + '</td>\n';
-            }
-        }
-        html_string += '</tr>\n'
-
-
-    })
-
-
-
-    html_string += '</table>';
-    return string_until_body + html_string + string_from_body;
-
-}
-
-function createHtmlStringFromCsv(retrievedData) {
-
-    var body_begin_index = html_content.indexOf('<body>');
-    var body_end_index = html_content.indexOf('</body>');
-
-    var string_until_body = html_content.slice(0, body_begin_index + 6);
-    var string_from_body = html_content.slice(body_end_index);
-
-
-    var html_string = '<table>\n'
-    html_string += '<tr>\n';
-    retrievedData[0].forEach(function(attribute) {
-        html_string += '<td>' + attribute + '</td>\n';
     });
 
-    html_string += '</tr>\n'
+}, 2000);
 
-    var data = retrievedData.slice(1);
+setInterval(function() {
 
-    data.forEach(function(row) {
-        html_string += '</tr>\n'
-        row.forEach(function(cell) {
-            html_string += '<td>' + cell + '</td>\n';
+    request('https://www.data.brisbane.qld.gov.au/data/dataset/edeb4918-34d0-428c-857d-70f8983af1b3/resource/69ed0503-43db-4873-abd6-9fcc500b805b/download/cars-srsa-open-data-food-safety-permits-1-july-2020.csv', function(err, request_res, body) {
+        csv.parse(body, function(err, data) {
+            csv_request_body = data;
+
         });
-        html_string += '</tr>\n'
-    })
-
-
-
-    html_string += '</table>';
-    return string_until_body + html_string + string_from_body;
-
-}
-
-request('https://www.bnefoodtrucks.com.au/api/1/trucks', function(err, request_res, body) {
-
-    json_request_body = body;
-
-});
-
-request('https://www.data.brisbane.qld.gov.au/data/dataset/edeb4918-34d0-428c-857d-70f8983af1b3/resource/69ed0503-43db-4873-abd6-9fcc500b805b/download/cars-srsa-open-data-food-safety-permits-1-july-2020.csv', function(err, request_res, body) {
-    csv.parse(body, function(err, data) {
-        csv_request_body = data;
-
     });
-});
+}, 2000)
+
+
+
 
 
 
@@ -109,10 +45,10 @@ http.createServer(function(req, res) {
         var request_url = url.parse(req.url);
         switch (request_url.path) {
             case '/json':
-                res.end(createHtmlStringFromJson(JSON.parse(json_request_body)));
+                res.end(create_html.createHtmlStringFromJson(html_content, JSON.parse(json_request_body)));
                 break;
             case '/csv':
-                res.end(createHtmlStringFromCsv(csv_request_body))
+                res.end(create_html.createHtmlStringFromCsv(html_content, csv_request_body))
                 break;
         }
 
