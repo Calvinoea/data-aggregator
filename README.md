@@ -7,7 +7,7 @@ The application has been made to aggregate data from APIs and CSV files, using a
 
 The application has the following features: 
 
-- Presents data from APIs and a CSV in a table
+- Presents data from APIs and CSV files in tables
 - Logs details of user access to data
 
 
